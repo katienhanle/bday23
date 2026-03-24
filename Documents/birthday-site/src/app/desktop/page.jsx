@@ -1,0 +1,580 @@
+'use client'
+
+import { useState, useCallback, useRef, useEffect } from 'react'
+import Window from '@/components/Window'
+import LeftNav from '@/components/LeftNav'
+import SecretMsg from '@/components/apps/SecretMsg'
+import Welcome from '@/components/apps/Welcome'
+import Playlist from '@/components/apps/Playlist'
+import VideoPlayer from '@/components/apps/VideoPlayer'
+import Memories from '@/components/apps/Memories'
+import Photobooth from '@/components/apps/Photobooth'
+import Inbox from '@/components/apps/Inbox'
+import InboxPreview from '@/components/apps/InboxPreview'
+import PhotostripPreview from '@/components/PhotostripPreview'
+
+
+// ─── Window config ────────────────────────────────────────────────────────
+// viewId: the navigation view this window maximizes into (null = no dedicated view)
+const WINDOWS = [
+  {
+    id: 'welcome',
+    icon: '✨', label: 'welcome.exe',
+    title: 'welcome', url: 'bday.exe/welcome',
+    width: 400, defaultPosition: { x: 210, y: 20 },
+    variant: 'dark', rotate: -2,
+    bodyStyle: { padding: 22 },
+    component: Welcome,
+    viewId: null,   // no dedicated nav view — lives on home screen only
+  },
+  {
+    id: 'msg',
+    icon: '💌', label: 'letter.exe',
+    title: 'a letter', url: 'bday.exe/letter',
+    width: 400, defaultPosition: { x: 620, y: 30 },
+    variant: 'dark', rotate: 3,
+    bodyStyle: { padding: 22 },
+    component: SecretMsg,
+    viewId: 'msg',
+  },
+  {
+    id: 'inbox-preview',
+    icon: '💬', label: 'inbox.exe',
+    title: 'inbox', url: 'bday.exe/inbox',
+    width: 220, defaultPosition: { x: 660, y: 440 },
+    variant: 'dark', rotate: -2,
+    bodyStyle: { padding: 16 },
+    component: InboxPreview,
+    viewId: 'inbox',
+  },
+  {
+    id: 'memories',
+    icon: '📷', label: 'memories.exe',
+    title: 'our year', url: 'bday.exe/memories',
+    width: 420, defaultPosition: { x: 190, y: 390 },
+    variant: 'dark', rotate: 2,
+    bodyStyle: { padding: 14, maxHeight: 400, overflowY: 'auto' },
+    component: Memories,
+    viewId: 'memories',
+  },
+  {
+    id: 'playlist',
+    icon: '🎵', label: 'playlist.exe',
+    title: 'your playlist', url: 'music.bday.exe',
+    width: 480, defaultPosition: { x: 700, y: 130 },
+    variant: 'dark', rotate: -3,
+    bodyStyle: { padding: 12 },
+    component: Playlist,
+    viewId: 'playlist',
+  },
+  {
+    id: 'inbox',
+    icon: '💬', label: 'inbox.exe',
+    title: 'inbox', url: 'bday.exe/inbox',
+    width: 480, defaultPosition: { x: 400, y: 100 },
+    variant: 'dark', rotate: 0,
+    bodyStyle: { padding: 20, maxHeight: 500, overflowY: 'auto' },
+    component: Inbox,
+    viewId: 'inbox',
+  },
+  {
+    id: 'video',
+    icon: '🎬', label: 'birthday_video.exe',
+    title: 'birthday video', url: 'bday.exe/video',
+    width: 520, defaultPosition: { x: 960, y: 25 },
+    variant: 'dark', rotate: -3,
+    bodyStyle: { padding: 0 },
+    component: VideoPlayer,
+    viewId: 'video',
+  },
+]
+
+// Background stars — left side clear for nav
+const STARS = [
+  { top: '7%',  left: '19%', size: '1.7rem', op: 0.7,  delay: '0s' },
+  { top: '14%', left: '73%', size: '1.3rem', op: 0.55, delay: '0.7s' },
+  { top: '63%', left: '9%',  size: '1.5rem', op: 0.6,  delay: '1.4s' },
+  { top: '78%', left: '87%', size: '1.9rem', op: 0.5,  delay: '0.4s' },
+  { top: '47%', left: '95%', size: '1.1rem', op: 0.65, delay: '1.1s' },
+  { top: '5%',  left: '51%', size: '1.2rem', op: 0.45, delay: '1.8s' },
+  { top: '88%', left: '39%', size: '1.4rem', op: 0.55, delay: '0.6s' },
+  { top: '35%', left: '4%',  size: '1rem',   op: 0.5,  delay: '1.3s' },
+  { top: '90%', left: '63%', size: '1.6rem', op: 0.4,  delay: '0.2s' },
+]
+
+function buildInitialState() {
+  const s = {}
+  WINDOWS.forEach((w) => {
+    // msg starts closed — opened by clicking the envelope
+    s[w.id] = { open: w.id !== 'msg' && w.id !== 'video' && w.id !== 'inbox', minimized: false, z: 1 }
+  })
+  return s
+}
+
+// ─── Photobooth full-screen view (bg shows through) ──────────────────────
+function PhotoboothView({ onBack }) {
+  return (
+    <div style={{
+      position: 'absolute',
+      left: 175,
+      top: 0,
+      right: 0,
+      bottom: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      zIndex: 100,
+    }}>
+      {/* Titlebar */}
+      <div style={{
+        background: 'var(--win-dark-bar)',
+        padding: '8px 12px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        flexShrink: 0,
+        fontFamily: 'var(--font-title)',
+        fontSize: '16px',
+        color: 'white',
+        cursor: 'default',
+      }}>
+        <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+          <span className="win-btn win-btn-close" onClick={onBack} title="Back to Home">✕</span>
+          <span className="win-btn win-btn-min">−</span>
+          <span className="win-btn win-btn-max" style={{ opacity: 0.5, cursor: 'default' }}>+</span>
+        </div>
+        <div className="window-url">
+          📷 bday.exe/photobooth
+        </div>
+        <span style={{ width: 50, flexShrink: 0 }} />
+      </div>
+
+      {/* Scrollable content — semi-transparent so bg.jpg shows through */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        background: 'rgba(0, 0, 0, 0.38)',
+      }}>
+        <Photobooth />
+      </div>
+    </div>
+  )
+}
+
+// ─── Full-screen view for a single app ────────────────────────────────────
+function FullScreenView({ win, onBack, appProps = {}, originPos = null }) {
+  const App = win.component
+  const isMedia = win.id === 'video' || win.id === 'inbox' || win.id === 'memories'
+
+  const bodyBg      = win.variant === 'pink' ? 'var(--win-pink-body)'   : 'var(--win-dark-body)'
+  const titlebarBg  = win.variant === 'pink' ? 'var(--win-pink-bar)'    : 'var(--win-dark-bar)'
+  const textColor   = win.variant === 'pink' ? 'var(--win-pink-text)'   : 'var(--win-dark-text)'
+
+  // Compute transform-origin relative to the FullScreenView container (left: 175)
+  const transformOrigin = originPos
+    ? `${Math.max(0, originPos.x - 175)}px ${originPos.y}px`
+    : 'center center'
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: 175,
+      top: 0,
+      right: 0,
+      bottom: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      zIndex: 100,
+      transformOrigin,
+      animation: 'fsv-expand 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+    }}>
+      {/* Titlebar */}
+      <div style={{
+        background: titlebarBg,
+        padding: '8px 12px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        flexShrink: 0,
+        fontFamily: 'var(--font-title)',
+        fontSize: '16px',
+        color: 'white',
+        cursor: 'default',
+      }}>
+        <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+          {/* Red = go back to Home */}
+          <span
+            className="win-btn win-btn-close"
+            onClick={onBack}
+            title="Back to Home"
+          >✕</span>
+          <span className="win-btn win-btn-min" title="—">−</span>
+          {/* Green = already maximized, visual indicator */}
+          <span
+            className="win-btn win-btn-max"
+            title="Maximized"
+            style={{ opacity: 0.5, cursor: 'default' }}
+          >+</span>
+        </div>
+
+        <div className="window-url" style={{ borderRadius: 0 }}>
+          {win.icon && <span style={{ marginRight: 4 }}>{win.icon}</span>}
+          {win.url}
+        </div>
+
+        <span style={{ width: 50, flexShrink: 0 }} />
+      </div>
+
+      {/* Scrollable content */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        background: bodyBg,
+        color: textColor,
+      }}>
+        <div style={{
+          maxWidth: isMedia ? '100%' : 680,
+          margin: '0 auto',
+          padding: isMedia ? 0 : '36px 32px',
+        }}>
+          <App {...appProps} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main Desktop ──────────────────────────────────────────────────────────
+export default function Desktop() {
+  // 'home' | 'msg' | 'memories' | 'playlist' | 'video'
+  const [view, setView]           = useState('home')
+  const [wins, setWins]           = useState(buildInitialState)
+  const [inboxInitialId, setInboxInitialId] = useState(null)
+  const [viewOrigin, setViewOrigin]         = useState(null)
+  const topZ                      = useRef(10)
+
+  function nextZ() { topZ.current += 1; return topZ.current }
+
+  const navigate = useCallback((id) => {
+    if (id === 'home' || id === 'photobooth') {
+      setView(id)
+    } else {
+      // open the corresponding window if it was closed, then switch view
+      const win = WINDOWS.find((w) => w.viewId === id)
+      if (win) {
+        const z = nextZ()
+        setWins((w) => ({ ...w, [win.id]: { open: true, minimized: false, z } }))
+      }
+      setView(id)
+    }
+  }, [])
+
+  const closeWindow = useCallback((id) => {
+    setWins((w) => ({ ...w, [id]: { ...w[id], open: false } }))
+  }, [])
+
+  const minimizeWindow = useCallback((id) => {
+    setWins((w) => ({ ...w, [id]: { ...w[id], minimized: true } }))
+  }, [])
+
+  const focusWindow = useCallback((id) => {
+    const z = nextZ()
+    setWins((w) => ({ ...w, [id]: { ...w[id], z } }))
+  }, [])
+
+  // Draggable envelope
+  const [envPos, setEnvPos]     = useState({ x: 560, y: 470 })
+  const envDragging              = useRef(false)
+  const envOffset                = useRef({ x: 0, y: 0 })
+  const envMoved                 = useRef(false)
+
+  function envMouseDown(e) {
+    if (e.button !== 0) return
+    envDragging.current = true
+    envMoved.current = false
+    envOffset.current = { x: e.clientX - envPos.x, y: e.clientY - envPos.y }
+    document.body.style.userSelect = 'none'
+  }
+
+  useEffect(() => {
+    function onMove(e) {
+      if (!envDragging.current) return
+      envMoved.current = true
+      setEnvPos({
+        x: Math.max(0, e.clientX - envOffset.current.x),
+        y: Math.max(0, e.clientY - envOffset.current.y),
+      })
+    }
+    function onUp() {
+      if (envDragging.current) {
+        envDragging.current = false
+        document.body.style.userSelect = ''
+      }
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+    return () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+  }, [])
+
+  // Draggable video.png
+  const [vidPos, setVidPos]     = useState({ x: 920, y: 390 })
+  const vidDragging              = useRef(false)
+  const vidOffset                = useRef({ x: 0, y: 0 })
+  const vidMoved                 = useRef(false)
+
+  function vidMouseDown(e) {
+    if (e.button !== 0) return
+    vidDragging.current = true
+    vidMoved.current = false
+    vidOffset.current = { x: e.clientX - vidPos.x, y: e.clientY - vidPos.y }
+    document.body.style.userSelect = 'none'
+  }
+
+  useEffect(() => {
+    function onMove(e) {
+      if (!vidDragging.current) return
+      vidMoved.current = true
+      setVidPos({
+        x: Math.max(0, e.clientX - vidOffset.current.x),
+        y: Math.max(0, e.clientY - vidOffset.current.y),
+      })
+    }
+    function onUp() {
+      if (vidDragging.current) { vidDragging.current = false; document.body.style.userSelect = '' }
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+    return () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp) }
+  }, [])
+
+  // Draggable sticker1
+  const [stickerFlipped, setStickerFlipped] = useState(false)
+  const [stickerPos, setStickerPos]         = useState({ x: 420, y: 200 })
+  const stickerDragging                  = useRef(false)
+  const stickerOffset                    = useRef({ x: 0, y: 0 })
+  const stickerMoved                     = useRef(false)
+
+  function stickerMouseDown(e) {
+    if (e.button !== 0) return
+    stickerDragging.current = true
+    stickerMoved.current = false
+    stickerOffset.current = { x: e.clientX - stickerPos.x, y: e.clientY - stickerPos.y }
+    document.body.style.userSelect = 'none'
+  }
+
+  useEffect(() => {
+    function onMove(e) {
+      if (!stickerDragging.current) return
+      stickerMoved.current = true
+      setStickerPos({
+        x: Math.max(0, e.clientX - stickerOffset.current.x),
+        y: Math.max(0, e.clientY - stickerOffset.current.y),
+      })
+    }
+    function onUp() {
+      if (stickerDragging.current) { stickerDragging.current = false; document.body.style.userSelect = '' }
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+    return () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp) }
+  }, [])
+
+
+  // Randomised photostrips — fetched once on mount
+  const [strips, setStrips] = useState([[], []])
+
+  useEffect(() => {
+    fetch('/api/photos')
+      .then((r) => r.json())
+      .then(({ photos }) => {
+        const gifs = (photos ?? []).filter((f) => /\.gif$/i.test(f))
+        if (gifs.length < 1) return
+        // Pick 2 random GIFs (different if possible)
+        const i1 = Math.floor(Math.random() * gifs.length)
+        let   i2 = Math.floor(Math.random() * gifs.length)
+        if (gifs.length > 1) {
+          while (i2 === i1) i2 = Math.floor(Math.random() * gifs.length)
+        }
+        setStrips([[gifs[i1]], [gifs[i2]]])
+      })
+      .catch(() => {})
+  }, [])
+
+  // The window config for the current full-screen view
+  const activeWin = view !== 'home' ? WINDOWS.find((w) => w.id === view) : null
+
+  return (
+    <div
+      className="desktop-bg"
+      style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}
+    >
+      <style>{`
+        @keyframes star-pulse {
+          0%, 100% { opacity: var(--sop); transform: scale(1); }
+          50%       { opacity: calc(var(--sop) * 1.4); transform: scale(1.2); }
+        }
+        @keyframes fsv-expand {
+          from { transform: scale(0.04); opacity: 0; }
+          to   { transform: scale(1);    opacity: 1; }
+        }
+        .sticker-hover { transition: transform 0.2s ease; }
+        .sticker-hover:hover { transform: scale(1.12); }
+      `}</style>
+
+      {/* ★ Background stars — only show in home view so they don't peek behind full-screen */}
+      {view === 'home' && STARS.map((s, i) => (
+        <span key={i} style={{
+          position: 'absolute',
+          top: s.top, left: s.left,
+          fontSize: s.size,
+          color: 'var(--star)',
+          '--sop': s.op,
+          opacity: s.op,
+          animation: 'star-pulse 5s ease-in-out infinite',
+          animationDelay: s.delay,
+          pointerEvents: 'none',
+          userSelect: 'none',
+          zIndex: 0,
+          lineHeight: 1,
+        }}>★</span>
+      ))}
+
+      {/* Home view: draggable windows */}
+      {view === 'home' && WINDOWS.map((w) => {
+        const state = wins[w.id]
+        if (w.id === 'msg')   return null   // letter opens via envelope only
+        if (w.id === 'video') return null   // video opens via video.png only
+        if (w.id === 'inbox') return null   // full inbox hidden — preview shows on home
+        if (!state.open || state.minimized) return null
+        const App = w.component
+        return (
+          <Window
+            key={w.id}
+            title={w.title}
+            icon={w.icon}
+            url={w.url}
+            width={w.width}
+            defaultPosition={w.defaultPosition}
+            zIndex={state.z}
+            variant={w.variant}
+            rotate={w.rotate}
+            onClose={() => closeWindow(w.id)}
+            onMinimize={() => minimizeWindow(w.id)}
+            onMaximize={w.viewId ? () => { setViewOrigin(w.defaultPosition); setView(w.viewId) } : undefined}
+            onFocus={() => focusWindow(w.id)}
+            bodyStyle={w.bodyStyle}
+          >
+            <App onOpen={w.id === 'inbox-preview'
+              ? (id) => { setInboxInitialId(id); navigate('inbox') }
+              : w.viewId ? () => navigate(w.viewId) : undefined}
+            />
+          </Window>
+        )
+      })}
+
+      {/* Photostrip preview — click opens Photobooth tab */}
+      {view === 'home' && strips[0].length > 0 && (
+        <PhotostripPreview
+          photos={strips[0]}
+          defaultPosition={{ x: 1080, y: 50 }}
+          zIndex={2}
+          rotate={5}
+          onClick={() => navigate('photobooth')}
+        />
+      )}
+
+      {/* video.png — draggable, click opens video tab */}
+      {view === 'home' && (
+        <img
+          src="/video.png"
+          alt="birthday video"
+          draggable={false}
+          onMouseDown={vidMouseDown}
+          onClick={() => { if (!vidMoved.current) navigate('video') }}
+          style={{
+            position: 'absolute',
+            left: vidPos.x,
+            top: vidPos.y,
+            width: 270,
+            cursor: 'grab',
+            zIndex: 5,
+            filter: 'drop-shadow(3px 4px 12px rgba(0,0,0,0.6))',
+            transform: 'rotate(4deg)',
+          }}
+        />
+      )}
+
+
+
+      {/* Envelope — draggable, click to open the letter (home view only) */}
+      {view === 'home' && (
+        <img
+          src="/letter.png"
+          alt="open letter"
+          draggable={false}
+          onMouseDown={envMouseDown}
+          onClick={() => { if (!envMoved.current) navigate('inbox') }}
+          style={{
+            position: 'absolute',
+            left: envPos.x,
+            top: envPos.y,
+            width: 270,
+            cursor: 'grab',
+            zIndex: 5,
+            filter: 'drop-shadow(3px 4px 12px rgba(0,0,0,0.6))',
+            transform: 'rotate(-6deg)',
+          }}
+        />
+      )}
+
+      {/* Sticker 1 — draggable, hover to enlarge */}
+      {view === 'home' && (
+        <img
+          src={stickerFlipped ? '/photos/wispa.jpg' : '/sticker1.PNG'}
+          alt="sticker"
+          draggable={false}
+          onMouseDown={stickerMouseDown}
+          onClick={() => { if (!stickerMoved.current) setStickerFlipped(f => !f) }}
+          className="sticker-hover"
+          style={{
+            position: 'absolute',
+            left: stickerPos.x,
+            top: stickerPos.y,
+            height: 220,
+            width: 'auto',
+            cursor: 'grab',
+            zIndex: 4,
+            filter: 'drop-shadow(2px 3px 8px rgba(0,0,0,0.4))',
+          }}
+        />
+      )}
+
+
+      {/* Photobooth full-screen view */}
+      {view === 'photobooth' && (
+        <PhotoboothView onBack={() => setView('home')} />
+      )}
+
+      {/* Full-screen view for a specific app */}
+      {activeWin && (
+        <FullScreenView
+          key={view}
+          win={activeWin}
+          onBack={() => setView('home')}
+          appProps={
+            activeWin.id === 'inbox'    ? { initialSelectedId: inboxInitialId } :
+            activeWin.id === 'memories' ? { showMonthNav: true } :
+            {}
+          }
+          originPos={viewOrigin}
+        />
+      )}
+
+      {/* Left nav — always visible */}
+      <LeftNav currentView={view} onNavigate={navigate} />
+    </div>
+  )
+}
