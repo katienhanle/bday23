@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { id: 'photobooth', label: 'Photobooth' },
   { id: 'playlist',   label: 'Music'      },
   { id: 'video',      label: 'Video'      },
+  { id: 'stickers',  label: 'Stickers'   },
 ]
 
 export default function LeftNav({ currentView, onNavigate }) {

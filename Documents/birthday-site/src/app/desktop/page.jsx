@@ -11,6 +11,7 @@ import Memories from '@/components/apps/Memories'
 import Photobooth from '@/components/apps/Photobooth'
 import Inbox from '@/components/apps/Inbox'
 import InboxPreview from '@/components/apps/InboxPreview'
+import Stickers from '@/components/apps/Stickers'
 import PhotostripPreview from '@/components/PhotostripPreview'
 
 
@@ -87,6 +88,16 @@ const WINDOWS = [
     component: VideoPlayer,
     viewId: 'video',
   },
+  {
+    id: 'stickers',
+    icon: '🎨', label: 'stickers.exe',
+    title: 'stickers', url: 'bday.exe/stickers',
+    width: 420, defaultPosition: { x: 300, y: 150 },
+    variant: 'dark', rotate: 0,
+    bodyStyle: { padding: 24 },
+    component: Stickers,
+    viewId: 'stickers',
+  },
 ]
 
 // Background stars — left side clear for nav
@@ -106,7 +117,7 @@ function buildInitialState() {
   const s = {}
   WINDOWS.forEach((w) => {
     // msg starts closed — opened by clicking the envelope
-    s[w.id] = { open: w.id !== 'msg' && w.id !== 'video' && w.id !== 'inbox', minimized: false, z: 1 }
+    s[w.id] = { open: w.id !== 'msg' && w.id !== 'video' && w.id !== 'inbox' && w.id !== 'stickers', minimized: false, z: 1 }
   })
   return s
 }
@@ -350,6 +361,34 @@ export default function Desktop() {
     return () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp) }
   }, [])
 
+  // Draggable tv.gif
+  const [tvPos, setTvPos]     = useState({ x: 1050, y: 300 })
+  const tvDragging             = useRef(false)
+  const tvOffset               = useRef({ x: 0, y: 0 })
+
+  function tvMouseDown(e) {
+    if (e.button !== 0) return
+    tvDragging.current = true
+    tvOffset.current = { x: e.clientX - tvPos.x, y: e.clientY - tvPos.y }
+    document.body.style.userSelect = 'none'
+  }
+
+  useEffect(() => {
+    function onMove(e) {
+      if (!tvDragging.current) return
+      setTvPos({
+        x: Math.max(0, e.clientX - tvOffset.current.x),
+        y: Math.max(0, e.clientY - tvOffset.current.y),
+      })
+    }
+    function onUp() {
+      if (tvDragging.current) { tvDragging.current = false; document.body.style.userSelect = '' }
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+    return () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp) }
+  }, [])
+
   // Draggable sticker1
   const [stickerFlipped, setStickerFlipped] = useState(false)
   const [stickerPos, setStickerPos]         = useState({ x: 420, y: 200 })
@@ -422,6 +461,10 @@ export default function Desktop() {
         }
         .sticker-hover { transition: transform 0.2s ease; }
         .sticker-hover:hover { transform: scale(1.12); }
+        .letter-hover { transition: transform 0.2s ease; transform: rotate(-6deg); }
+        .letter-hover:hover { transform: rotate(-6deg) scale(1.12); }
+        .video-hover  { transition: transform 0.2s ease; transform: rotate(4deg); }
+        .video-hover:hover  { transform: rotate(4deg) scale(1.12); }
       `}</style>
 
       {/* ★ Background stars — only show in home view so they don't peek behind full-screen */}
@@ -447,7 +490,8 @@ export default function Desktop() {
         const state = wins[w.id]
         if (w.id === 'msg')   return null   // letter opens via envelope only
         if (w.id === 'video') return null   // video opens via video.png only
-        if (w.id === 'inbox') return null   // full inbox hidden — preview shows on home
+        if (w.id === 'inbox') return null    // full inbox hidden — preview shows on home
+        if (w.id === 'stickers') return null // nav-only view
         if (!state.open || state.minimized) return null
         const App = w.component
         return (
@@ -492,6 +536,7 @@ export default function Desktop() {
           src="/video.png"
           alt="birthday video"
           draggable={false}
+          className="video-hover"
           onMouseDown={vidMouseDown}
           onClick={() => { if (!vidMoved.current) navigate('video') }}
           style={{
@@ -502,7 +547,6 @@ export default function Desktop() {
             cursor: 'grab',
             zIndex: 5,
             filter: 'drop-shadow(3px 4px 12px rgba(0,0,0,0.6))',
-            transform: 'rotate(4deg)',
           }}
         />
       )}
@@ -515,6 +559,7 @@ export default function Desktop() {
           src="/letter.png"
           alt="open letter"
           draggable={false}
+          className="letter-hover"
           onMouseDown={envMouseDown}
           onClick={() => { if (!envMoved.current) navigate('inbox') }}
           style={{
@@ -525,7 +570,27 @@ export default function Desktop() {
             cursor: 'grab',
             zIndex: 5,
             filter: 'drop-shadow(3px 4px 12px rgba(0,0,0,0.6))',
-            transform: 'rotate(-6deg)',
+          }}
+        />
+      )}
+
+      {/* tv.gif — draggable, hover to enlarge, no click action */}
+      {view === 'home' && (
+        <img
+          src="/tv1.gif"
+          alt="tv"
+          draggable={false}
+          onMouseDown={tvMouseDown}
+          className="sticker-hover"
+          style={{
+            position: 'absolute',
+            left: tvPos.x,
+            top: tvPos.y,
+            height: 240,
+            width: 'auto',
+            cursor: 'grab',
+            zIndex: 4,
+            filter: 'drop-shadow(2px 3px 8px rgba(0,0,0,0.4))',
           }}
         />
       )}
@@ -533,7 +598,7 @@ export default function Desktop() {
       {/* Sticker 1 — draggable, hover to enlarge */}
       {view === 'home' && (
         <img
-          src={stickerFlipped ? '/photos/wispa.jpg' : '/sticker1.PNG'}
+          src={stickerFlipped ? '/wispa.jpg' : '/sticker1.PNG'}
           alt="sticker"
           draggable={false}
           onMouseDown={stickerMouseDown}

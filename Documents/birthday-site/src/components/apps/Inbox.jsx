@@ -199,9 +199,10 @@ export default function Inbox({ initialSelectedId = null }) {
             {/* Stickers for mia/nancy */}
             {active.id === 12 && (
               <div style={{ display: 'flex', gap: 16, marginTop: 24 }}>
-                <StickerToggle defaultSrc="/sticker1.PNG" altSrc="/photos/wispa.jpg" alt="sticker1" label="nancy" />
+                <StickerToggle defaultSrc="/sticker1.PNG" altSrc="/wispa.jpg" alt="sticker1" label="nancy" />
                 <StickerToggle defaultSrc="/sticker2.PNG" altSrc="/boat.png" alt="sticker2" label="nancy" />
                 <StickerToggle defaultSrc="/sticker3.png" altSrc="/cosplay.JPG" alt="sticker3" label="mia" />
+                <StickerToggle defaultSrc="/sticker4.PNG" altSrc="/christmas.png" alt="sticker4" label="mia" />
               </div>
             )}
           </>
