@@ -6,8 +6,8 @@ export const MESSAGES = [
     id: 0,
     from: 'katie',
     emoji: '📌',
-    message: '',
-    photo: null,
+    message: `arielllll\n\nit's finally here! i've been so bad at keeping my mouth shut about being excited for your birthday\nbut i can't help it! this is a special day—ariel day!\n\ni told you i don't think my top love language is gift giving in particular,\ni think it's just that i like to show you a lot of affection no matter what language\nand that for your birthday, a day dedicated to appreciating you as a person, i thought gift giving would be appropriate\nbut along with that i'll give you my time, my love, and my attention :)\nand that does mean that\ni always like to show that you're loved by me\n\nbut i thought today, it would be a good chance for me to also show you that you're loved by many, many others\nyour closest friends and more distant ones\nthat they all thought of you and set aside time to write you a message\nthey all have different views and versions of "ariel" in their minds, and all of them come together to share a distant affection for you\n\ni hope that i made your 23rd memorable, and i can't wait to celebrate the rest of your birthdays with you\n\n- katie`,
+    photo: 'wispa.jpg',
     pinned: true,
   },
   {

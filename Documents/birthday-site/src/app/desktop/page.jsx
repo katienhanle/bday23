@@ -485,137 +485,135 @@ export default function Desktop() {
         }}>★</span>
       ))}
 
-      {/* Home view: draggable windows */}
-      {view === 'home' && WINDOWS.map((w) => {
+      {/* Home view: draggable windows — always mounted so positions persist across nav */}
+      {WINDOWS.map((w) => {
         const state = wins[w.id]
-        if (w.id === 'msg')   return null   // letter opens via envelope only
-        if (w.id === 'video') return null   // video opens via video.png only
-        if (w.id === 'inbox') return null    // full inbox hidden — preview shows on home
-        if (w.id === 'stickers') return null // nav-only view
+        if (w.id === 'msg')           return null   // letter opens via envelope only
+        if (w.id === 'video')         return null   // video opens via video.png only
+        if (w.id === 'inbox')         return null   // full inbox hidden — preview shows on home
+        if (w.id === 'inbox-preview') return null   // rendered as fixed chat panel below
+        if (w.id === 'stickers')      return null   // nav-only view
         if (!state.open || state.minimized) return null
         const App = w.component
         return (
-          <Window
-            key={w.id}
-            title={w.title}
-            icon={w.icon}
-            url={w.url}
-            width={w.width}
-            defaultPosition={w.defaultPosition}
-            zIndex={state.z}
-            variant={w.variant}
-            rotate={w.rotate}
-            onClose={() => closeWindow(w.id)}
-            onMinimize={() => minimizeWindow(w.id)}
-            onMaximize={w.viewId ? () => { setViewOrigin(w.defaultPosition); setView(w.viewId) } : undefined}
-            onFocus={() => focusWindow(w.id)}
-            bodyStyle={w.bodyStyle}
-          >
-            <App onOpen={w.id === 'inbox-preview'
-              ? (id) => { setInboxInitialId(id); navigate('inbox') }
-              : w.viewId ? () => navigate(w.viewId) : undefined}
-            />
-          </Window>
+          <div key={w.id} style={{ display: view === 'home' ? undefined : 'none' }}>
+            <Window
+              title={w.title}
+              icon={w.icon}
+              url={w.url}
+              width={w.width}
+              defaultPosition={w.defaultPosition}
+              zIndex={state.z}
+              variant={w.variant}
+              rotate={w.rotate}
+              onClose={() => closeWindow(w.id)}
+              onMinimize={() => minimizeWindow(w.id)}
+              onMaximize={w.viewId ? () => { setViewOrigin(w.defaultPosition); setView(w.viewId) } : undefined}
+              onFocus={() => focusWindow(w.id)}
+              bodyStyle={w.bodyStyle}
+            >
+              <App onOpen={w.id === 'inbox-preview'
+                ? (id) => { setInboxInitialId(id); navigate('inbox') }
+                : w.viewId ? () => navigate(w.viewId) : undefined}
+              />
+            </Window>
+          </div>
         )
       })}
 
       {/* Photostrip preview — click opens Photobooth tab */}
-      {view === 'home' && strips[0].length > 0 && (
-        <PhotostripPreview
-          photos={strips[0]}
-          defaultPosition={{ x: 1080, y: 50 }}
-          zIndex={2}
-          rotate={5}
-          onClick={() => navigate('photobooth')}
-        />
+      {strips[0].length > 0 && (
+        <div style={{ display: view === 'home' ? undefined : 'none' }}>
+          <PhotostripPreview
+            photos={strips[0]}
+            defaultPosition={{ x: 1080, y: 50 }}
+            zIndex={2}
+            rotate={5}
+            onClick={() => navigate('photobooth')}
+          />
+        </div>
       )}
 
       {/* video.png — draggable, click opens video tab */}
-      {view === 'home' && (
-        <img
-          src="/video.png"
-          alt="birthday video"
-          draggable={false}
-          className="video-hover"
-          onMouseDown={vidMouseDown}
-          onClick={() => { if (!vidMoved.current) navigate('video') }}
-          style={{
-            position: 'absolute',
-            left: vidPos.x,
-            top: vidPos.y,
-            width: 270,
-            cursor: 'grab',
-            zIndex: 5,
-            filter: 'drop-shadow(3px 4px 12px rgba(0,0,0,0.6))',
-          }}
-        />
-      )}
+      <img
+        src="/video.png"
+        alt="birthday video"
+        draggable={false}
+        className="video-hover"
+        onMouseDown={vidMouseDown}
+        onClick={() => { if (!vidMoved.current) navigate('video') }}
+        style={{
+          display: view === 'home' ? undefined : 'none',
+          position: 'absolute',
+          left: vidPos.x,
+          top: vidPos.y,
+          width: 270,
+          cursor: 'grab',
+          zIndex: 5,
+          filter: 'drop-shadow(3px 4px 12px rgba(0,0,0,0.6))',
+        }}
+      />
 
-
-
-      {/* Envelope — draggable, click to open the letter (home view only) */}
-      {view === 'home' && (
-        <img
-          src="/letter.png"
-          alt="open letter"
-          draggable={false}
-          className="letter-hover"
-          onMouseDown={envMouseDown}
-          onClick={() => { if (!envMoved.current) navigate('inbox') }}
-          style={{
-            position: 'absolute',
-            left: envPos.x,
-            top: envPos.y,
-            width: 270,
-            cursor: 'grab',
-            zIndex: 5,
-            filter: 'drop-shadow(3px 4px 12px rgba(0,0,0,0.6))',
-          }}
-        />
-      )}
+      {/* Envelope — draggable, click to open inbox */}
+      <img
+        src="/letter.png"
+        alt="open letter"
+        draggable={false}
+        className="letter-hover"
+        onMouseDown={envMouseDown}
+        onClick={() => { if (!envMoved.current) navigate('inbox') }}
+        style={{
+          display: view === 'home' ? undefined : 'none',
+          position: 'absolute',
+          left: envPos.x,
+          top: envPos.y,
+          width: 270,
+          cursor: 'grab',
+          zIndex: 5,
+          filter: 'drop-shadow(3px 4px 12px rgba(0,0,0,0.6))',
+        }}
+      />
 
       {/* tv.gif — draggable, hover to enlarge, no click action */}
-      {view === 'home' && (
-        <img
-          src="/tv1.gif"
-          alt="tv"
-          draggable={false}
-          onMouseDown={tvMouseDown}
-          className="sticker-hover"
-          style={{
-            position: 'absolute',
-            left: tvPos.x,
-            top: tvPos.y,
-            height: 240,
-            width: 'auto',
-            cursor: 'grab',
-            zIndex: 4,
-            filter: 'drop-shadow(2px 3px 8px rgba(0,0,0,0.4))',
-          }}
-        />
-      )}
+      <img
+        src="/tv1.gif"
+        alt="tv"
+        draggable={false}
+        onMouseDown={tvMouseDown}
+        className="sticker-hover"
+        style={{
+          display: view === 'home' ? undefined : 'none',
+          position: 'absolute',
+          left: tvPos.x,
+          top: tvPos.y,
+          height: 240,
+          width: 'auto',
+          cursor: 'grab',
+          zIndex: 4,
+          filter: 'drop-shadow(2px 3px 8px rgba(0,0,0,0.4))',
+        }}
+      />
 
-      {/* Sticker 1 — draggable, hover to enlarge */}
-      {view === 'home' && (
-        <img
-          src={stickerFlipped ? '/wispa.jpg' : '/sticker1.PNG'}
-          alt="sticker"
-          draggable={false}
-          onMouseDown={stickerMouseDown}
-          onClick={() => { if (!stickerMoved.current) setStickerFlipped(f => !f) }}
-          className="sticker-hover"
-          style={{
-            position: 'absolute',
-            left: stickerPos.x,
-            top: stickerPos.y,
-            height: 220,
-            width: 'auto',
-            cursor: 'grab',
-            zIndex: 4,
-            filter: 'drop-shadow(2px 3px 8px rgba(0,0,0,0.4))',
-          }}
-        />
-      )}
+      {/* Sticker 1 — draggable, click to flip, hover to enlarge */}
+      <img
+        src={stickerFlipped ? '/wispa.jpg' : '/sticker1.PNG'}
+        alt="sticker"
+        draggable={false}
+        onMouseDown={stickerMouseDown}
+        onClick={() => { if (!stickerMoved.current) setStickerFlipped(f => !f) }}
+        className="sticker-hover"
+        style={{
+          display: view === 'home' ? undefined : 'none',
+          position: 'absolute',
+          left: stickerPos.x,
+          top: stickerPos.y,
+          height: 220,
+          width: 'auto',
+          cursor: 'grab',
+          zIndex: 4,
+          filter: 'drop-shadow(2px 3px 8px rgba(0,0,0,0.4))',
+        }}
+      />
 
 
       {/* Photobooth full-screen view */}
@@ -635,6 +633,13 @@ export default function Desktop() {
             {}
           }
           originPos={viewOrigin}
+        />
+      )}
+
+      {/* Inbox chat panel — fixed bottom right, home view only */}
+      {view === 'home' && (
+        <InboxPreview
+          onOpen={(id) => { setInboxInitialId(id); navigate('inbox') }}
         />
       )}
 
