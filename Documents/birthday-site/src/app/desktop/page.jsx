@@ -176,8 +176,6 @@ function PhotoboothView({ onBack }) {
 function FullScreenView({ win, onBack, appProps = {}, originPos = null }) {
   const App = win.component
   const isMedia = win.id === 'video' || win.id === 'inbox' || win.id === 'memories'
-  const containerRef = useRef(null)
-
   const bodyBg      = win.variant === 'pink' ? 'var(--win-pink-body)'   : 'var(--win-dark-body)'
   const titlebarBg  = win.variant === 'pink' ? 'var(--win-pink-bar)'    : 'var(--win-dark-bar)'
   const textColor   = win.variant === 'pink' ? 'var(--win-pink-text)'   : 'var(--win-dark-text)'
@@ -187,34 +185,20 @@ function FullScreenView({ win, onBack, appProps = {}, originPos = null }) {
     ? `${Math.max(0, originPos.x - 175)}px ${originPos.y}px`
     : 'center center'
 
-  // After the expand animation ends, clear the transform so it doesn't create a
-  // new containing block — which breaks scrollIntoView and position:sticky in Safari.
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    function onEnd() {
-      el.style.transform = 'none'
-      el.style.animation = 'none'
-    }
-    el.addEventListener('animationend', onEnd, { once: true })
-    return () => el.removeEventListener('animationend', onEnd)
-  }, [])
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        position: 'absolute',
-        left: 175,
-        top: 0,
-        right: 0,
-        bottom: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        zIndex: 100,
-        transformOrigin,
-        animation: 'fsv-expand 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-      }}>
+    <div style={{
+      position: 'absolute',
+      left: 175,
+      top: 0,
+      right: 0,
+      bottom: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      zIndex: 100,
+      transformOrigin,
+      animation: 'fsv-expand 0.38s cubic-bezier(0.16, 1, 0.3, 1) backwards',
+    }}>
       {/* Titlebar */}
       <div style={{
         background: titlebarBg,
@@ -255,7 +239,7 @@ function FullScreenView({ win, onBack, appProps = {}, originPos = null }) {
       {/* Scrollable content */}
       <div className="fsv-scroll" style={{
         flex: 1,
-        overflowY: 'auto',
+        overflowY: isMedia ? 'hidden' : 'auto',
         background: bodyBg,
         color: textColor,
       }}>
@@ -263,6 +247,7 @@ function FullScreenView({ win, onBack, appProps = {}, originPos = null }) {
           maxWidth: isMedia ? '100%' : 680,
           margin: '0 auto',
           padding: isMedia ? 0 : '36px 32px',
+          height: isMedia ? '100%' : undefined,
         }}>
           <App {...appProps} />
         </div>
@@ -272,15 +257,34 @@ function FullScreenView({ win, onBack, appProps = {}, originPos = null }) {
 }
 
 // ─── Main Desktop ──────────────────────────────────────────────────────────
+const MOBILE_NAV = [
+  { id: 'home',       emoji: '🏠', label: 'Home'     },
+  { id: 'msg',        emoji: '💌', label: 'Letter'   },
+  { id: 'inbox',      emoji: '💬', label: 'Inbox'    },
+  { id: 'memories',   emoji: '📷', label: 'Memories' },
+  { id: 'photobooth', emoji: '📸', label: 'Photos'   },
+  { id: 'playlist',   emoji: '🎵', label: 'Music'    },
+  { id: 'video',      emoji: '🎬', label: 'Video'    },
+  { id: 'stickers',   emoji: '✨', label: 'Stickers' },
+]
+
 export default function Desktop() {
   // 'home' | 'msg' | 'memories' | 'playlist' | 'video'
   const [view, setView]           = useState('home')
   const [wins, setWins]           = useState(buildInitialState)
   const [inboxInitialId, setInboxInitialId] = useState(null)
   const [viewOrigin, setViewOrigin]         = useState(null)
+  const [isMobile, setIsMobile]             = useState(false)
   const topZ                      = useRef(10)
 
   function nextZ() { topZ.current += 1; return topZ.current }
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const navigate = useCallback((id) => {
     if (id === 'home' || id === 'photobooth') {
@@ -460,6 +464,156 @@ export default function Desktop() {
 
   // The window config for the current full-screen view
   const activeWin = view !== 'home' ? WINDOWS.find((w) => w.id === view) : null
+
+  // ── Mobile layout ──────────────────────────────────────────────────────────
+  if (isMobile) {
+    return (
+      <div className="desktop-bg" style={{
+        width: '100vw',
+        height: '100svh',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        fontFamily: 'var(--font-body)',
+      }}>
+
+        {/* Content area */}
+        <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+
+          {/* Home */}
+          <div style={{
+            display: view === 'home' ? 'flex' : 'none',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            padding: '32px 24px',
+            gap: 24,
+          }}>
+            <div style={{
+              fontFamily: 'var(--font-title)',
+              fontSize: '2.4rem',
+              color: 'var(--pink-hot)',
+              textShadow: '0 0 20px rgba(255,63,164,0.45)',
+              textAlign: 'center',
+              lineHeight: 1.15,
+            }}>
+              ariel's<br />23rd birthday!
+            </div>
+            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', textAlign: 'center' }}>
+              tap below to explore ✦
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, width: '100%', maxWidth: 340 }}>
+              {MOBILE_NAV.filter(n => n.id !== 'home').map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => setView(item.id)}
+                  style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 10,
+                    padding: '14px 6px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <span style={{ fontSize: '1.4rem' }}>{item.emoji}</span>
+                  <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-body)' }}>
+                    {item.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Letter */}
+          <div style={{ display: view === 'msg' ? 'block' : 'none', height: '100%', overflowY: 'auto' }}>
+            <div style={{ padding: '24px 20px' }}>
+              <SecretMsg />
+            </div>
+          </div>
+
+          {/* Inbox */}
+          <div style={{ display: view === 'inbox' ? 'block' : 'none', height: '100%', overflow: 'hidden' }}>
+            <Inbox isMobile={true} />
+          </div>
+
+          {/* Memories */}
+          <div style={{ display: view === 'memories' ? 'block' : 'none', height: '100%', overflow: 'hidden' }}>
+            <Memories showMonthNav={true} isMobile={true} />
+          </div>
+
+          {/* Photobooth */}
+          <div style={{ display: view === 'photobooth' ? 'block' : 'none', height: '100%', overflowY: 'auto' }}>
+            <Photobooth />
+          </div>
+
+          {/* Playlist */}
+          <div style={{ display: view === 'playlist' ? 'block' : 'none', height: '100%', overflowY: 'auto' }}>
+            <Playlist />
+          </div>
+
+          {/* Video */}
+          <div style={{ display: view === 'video' ? 'block' : 'none', height: '100%' }}>
+            <VideoPlayer />
+          </div>
+
+          {/* Stickers */}
+          <div style={{ display: view === 'stickers' ? 'block' : 'none', height: '100%', overflowY: 'auto' }}>
+            <Stickers />
+          </div>
+        </div>
+
+        {/* Bottom tab bar */}
+        <div style={{
+          flexShrink: 0,
+          height: 58,
+          background: 'var(--win-dark-bar)',
+          borderTop: '1px solid var(--win-dark-border)',
+          display: 'flex',
+          alignItems: 'stretch',
+          overflowX: 'auto',
+        }}>
+          {MOBILE_NAV.map(item => {
+            const active = view === item.id
+            return (
+              <button
+                key={item.id}
+                onClick={() => setView(item.id)}
+                style={{
+                  flex: '0 0 auto',
+                  minWidth: 60,
+                  background: 'none',
+                  border: 'none',
+                  borderTop: active ? '2px solid var(--pink-hot)' : '2px solid transparent',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 3,
+                  padding: '0 10px',
+                }}
+              >
+                <span style={{ fontSize: '1.1rem' }}>{item.emoji}</span>
+                <span style={{
+                  fontSize: '8px',
+                  fontFamily: 'var(--font-body)',
+                  color: active ? 'var(--pink-hot)' : 'rgba(255,255,255,0.35)',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {item.label}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div

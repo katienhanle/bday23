@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+
 // EDIT: Fill in title and note for each photo entry below.
 
 const MONTHS = [
@@ -91,7 +93,7 @@ const MONTHS = [
     { file: '04022026.jpg',  date: 'Apr 2',  title: 'kpop demon hunters night', note: 'mcdonalds and netflix kpop demon hunters night! hehe' },
     { file: '04052026.jpg',  date: 'Apr 5',  title: 'clubbing in pb', note: 'went clubbing in pb with friends!' },
     { file: '04092026.jpg',  date: 'Apr 9',  title: 'it\'s your birthday!', note: 'got cake from harucake and i got you a pink bouquet!' },
-    { file: '04092026.gif',  date: 'Apr 9',  title: 'birthday video', note: 'got cake from harucake and i got you a pink bouquet!' },
+    { file: '04092026.gif',  date: 'Apr 9',  title: 'bouquet for bday girl', note: 'got cake from harucake and i got you a pink bouquet!' },
   ]},
 ]
 
@@ -146,115 +148,139 @@ function PhotoCard({ photo, index }) {
   )
 }
 
-// Generate a short label + DOM id for each month
-function monthId(label) {
-  // e.g. "April 2025" → "APR25"
-  const [month, year] = label.split(' ')
-  return month.slice(0, 3).toUpperCase() + year.slice(2)
-}
 
-export default function Memories({ showMonthNav = false }) {
+export default function Memories({ showMonthNav = false, isMobile = false }) {
+  const [activeMonth, setActiveMonth] = useState(0)
   let idx = 0
 
-  return (
-    <div style={{ fontFamily: 'var(--font-body)' }}>
+  const month = showMonthNav ? MONTHS[activeMonth] : null
+  const sidebarW = isMobile ? 90 : 160
 
-      {/* ── Sticky month strip — only in full-screen ── */}
+  return (
+    <div style={{ fontFamily: 'var(--font-body)', display: 'flex', height: '100%' }}>
+
+      {/* ── Full-screen: left sidebar ── */}
       {showMonthNav && (
         <div style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
-          background: 'var(--win-dark-body)',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-          display: 'flex',
-          gap: 4,
-          padding: '6px 12px',
-          overflowX: 'auto',
+          width: sidebarW,
+          flexShrink: 0,
+          borderRight: '1px solid rgba(255,255,255,0.08)',
+          overflowY: 'auto',
+          padding: '20px 0',
         }}>
-          {MONTHS.map((month) => {
-            const mid = monthId(month.label)
+          <div style={{
+            fontFamily: 'var(--font-title)',
+            fontSize: '0.75rem',
+            color: 'rgba(255,255,255,0.3)',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            padding: '0 14px 10px',
+          }}>
+            memories
+          </div>
+          {MONTHS.map((m, i) => {
+            const isActive = i === activeMonth
             return (
-              <button
-                key={mid}
-                onClick={() => document.getElementById('month-' + mid)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              <div
+                key={m.label}
+                onClick={() => setActiveMonth(i)}
                 style={{
-                  background: 'none',
-                  border: '1px solid rgba(255,255,255,0.12)',
+                  padding: isMobile ? '7px 8px' : '8px 14px',
                   cursor: 'pointer',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '10px',
-                  letterSpacing: '0.06em',
-                  color: 'rgba(255,255,255,0.45)',
-                  padding: '3px 9px',
-                  whiteSpace: 'nowrap',
-                  transition: 'color 0.15s, border-color 0.15s, background 0.15s',
+                  borderLeft: isActive ? '2px solid var(--pink-hot)' : '2px solid transparent',
+                  background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+                  transition: 'background 0.15s',
                 }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.color = 'var(--pink-hot)'
-                  e.currentTarget.style.borderColor = 'var(--pink-hot)'
-                  e.currentTarget.style.background = 'rgba(255,63,164,0.08)'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.color = 'rgba(255,255,255,0.45)'
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'
-                  e.currentTarget.style.background = 'none'
-                }}
+                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
               >
-                {mid}
-              </button>
+                <div style={{
+                  fontFamily: 'var(--font-title)',
+                  fontSize: isMobile ? '0.75rem' : '0.95rem',
+                  color: isActive ? 'var(--pink-hot)' : 'rgba(255,255,255,0.6)',
+                  lineHeight: 1.2,
+                  transition: 'color 0.15s',
+                }}>
+                  {m.label.split(' ')[0]}
+                </div>
+                <div style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '9px',
+                  color: isActive ? 'rgba(255,63,164,0.6)' : 'rgba(255,255,255,0.25)',
+                }}>
+                  {m.label.split(' ')[1]}
+                </div>
+              </div>
             )
           })}
         </div>
       )}
 
-      {/* ── Timeline content ── */}
-      <div style={{ padding: '36px 40px', maxWidth: 760, margin: '0 auto' }}>
-        <div style={{
-          textAlign: 'center', marginBottom: 14,
-          paddingBottom: 10, borderBottom: '1px solid rgba(255,255,255,0.1)',
-        }}>
-          <div style={{ fontFamily: 'var(--font-title)', fontSize: '1.45rem', color: 'var(--pink-hot)' }}>
-            Apr 9, 2025 → Apr 9, 2026
-          </div>
-          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', marginTop: 3 }}>
-            a whole year of memories ✦
-          </div>
-        </div>
+      {/* ── Right: content ── */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '20px 16px' : '32px 40px' }}>
 
-        {MONTHS.map((month) => {
-          const mid = monthId(month.label)
-          return (
-            <div key={month.label} id={'month-' + mid} style={{ marginBottom: 8, scrollMarginTop: 44 }}>
-              <div style={{
-                display: 'flex', alignItems: 'baseline', gap: 7,
-                marginBottom: 10, paddingBottom: 3,
-                borderBottom: '1px solid rgba(255,255,255,0.08)',
-              }}>
-                <span style={{ fontFamily: 'var(--font-title)', fontSize: '1.1rem', color: 'var(--pink-hot)' }}>
-                  {month.label}
-                </span>
-                {month.sub && (
-                  <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>{month.sub}</span>
-                )}
-              </div>
-
-              {month.photos.length === 0 && (
-                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', paddingBottom: 8 }}>
-                  coming soon 🩷
-                </div>
+        {/* Full-screen: selected month */}
+        {showMonthNav && month && (
+          <>
+            <div style={{
+              display: 'flex', alignItems: 'baseline', gap: 7,
+              marginBottom: 18, paddingBottom: 6,
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+            }}>
+              <span style={{ fontFamily: 'var(--font-title)', fontSize: '1.1rem', color: 'var(--pink-hot)' }}>
+                {month.label}
+              </span>
+              {month.sub && (
+                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>{month.sub}</span>
               )}
-
-              {month.photos.map((p) => <PhotoCard key={p.file} photo={p} index={idx++} />)}
             </div>
-          )
-        })}
+            {month.photos.length === 0 ? (
+              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)' }}>coming soon 🩷</div>
+            ) : (
+              month.photos.map((p, i) => <PhotoCard key={p.file} photo={p} index={i} />)
+            )}
+          </>
+        )}
 
-        <div style={{
-          textAlign: 'center', padding: '12px 0 4px',
-          fontFamily: 'var(--font-title)', fontSize: '1rem',
-          color: 'rgba(255,255,255,0.3)',
-        }}>✦ end of year one ✦</div>
+        {/* Preview: all months */}
+        {!showMonthNav && (
+          <>
+            <div style={{
+              textAlign: 'center', marginBottom: 14,
+              paddingBottom: 10, borderBottom: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              <div style={{ fontFamily: 'var(--font-title)', fontSize: '1.45rem', color: 'var(--pink-hot)' }}>
+                Apr 9, 2025 → Apr 9, 2026
+              </div>
+              <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', marginTop: 3 }}>
+                a whole year of memories ✦
+              </div>
+            </div>
+            {MONTHS.map((m) => (
+              <div key={m.label} style={{ marginBottom: 8 }}>
+                <div style={{
+                  display: 'flex', alignItems: 'baseline', gap: 7,
+                  marginBottom: 10, paddingBottom: 3,
+                  borderBottom: '1px solid rgba(255,255,255,0.08)',
+                }}>
+                  <span style={{ fontFamily: 'var(--font-title)', fontSize: '1.1rem', color: 'var(--pink-hot)' }}>
+                    {m.label}
+                  </span>
+                  {m.sub && <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>{m.sub}</span>}
+                </div>
+                {m.photos.length === 0 && (
+                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', paddingBottom: 8 }}>coming soon 🩷</div>
+                )}
+                {m.photos.map((p) => <PhotoCard key={p.file} photo={p} index={idx++} />)}
+              </div>
+            ))}
+            <div style={{
+              textAlign: 'center', padding: '12px 0 4px',
+              fontFamily: 'var(--font-title)', fontSize: '1rem',
+              color: 'rgba(255,255,255,0.3)',
+            }}>✦ end of year one ✦</div>
+          </>
+        )}
       </div>
     </div>
   )

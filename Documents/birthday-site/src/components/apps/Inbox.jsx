@@ -68,13 +68,99 @@ function Avatar({ msg, size = 40 }) {
   )
 }
 
-export default function Inbox({ initialSelectedId = null }) {
+export default function Inbox({ initialSelectedId = null, isMobile = false }) {
   const [selectedId, setSelectedId] = useState(initialSelectedId)
   const [hoveredId, setHoveredId]   = useState(null)
   const active = MESSAGES.find((m) => m.id === selectedId)
 
+  // Mobile: list/detail pattern — show list OR message, not side by side
+  if (isMobile) {
+    return (
+      <div style={{ height: '100%', fontFamily: 'var(--font-body)', display: 'flex', flexDirection: 'column' }}>
+        {active ? (
+          // Detail view
+          <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px' }}>
+            <button
+              onClick={() => setSelectedId(null)}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'var(--pink-hot)', fontFamily: 'var(--font-body)',
+                fontSize: '13px', marginBottom: 18, padding: 0,
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}
+            >
+              ← back
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+              <Avatar msg={active} size={40} />
+              <span style={{ fontFamily: 'var(--font-title)', fontSize: '1.1rem', color: 'var(--pink-hot)' }}>
+                {active.from}
+              </span>
+            </div>
+            <div style={{ paddingLeft: 52 }}>
+              <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.82)', lineHeight: 1.85, margin: '0 0 16px', whiteSpace: 'pre-wrap' }}>
+                {active.message}
+              </p>
+              {(() => {
+                const allPhotos = active.photos ?? (active.photo ? [active.photo] : [])
+                if (allPhotos.length === 0) return null
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {allPhotos.map((src, i) => (
+                      <img key={i} src={`/${src}`} alt={`${active.from} ${i + 1}`}
+                        style={{ width: '100%', borderRadius: 8, display: 'block' }} />
+                    ))}
+                  </div>
+                )
+              })()}
+            </div>
+          </div>
+        ) : (
+          // List view
+          <div style={{ flex: 1, overflowY: 'auto', padding: '12px 0' }}>
+            <div style={{
+              fontFamily: 'var(--font-title)', fontSize: '0.75rem',
+              color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em',
+              textTransform: 'uppercase', padding: '0 16px 10px',
+            }}>messages</div>
+            {MESSAGES.map((msg) => {
+              const isPinned = msg.pinned
+              const preview  = msg.message ? msg.message.replace(/\n/g, ' ').slice(0, 50) + '…' : ''
+              return (
+                <div
+                  key={msg.id}
+                  onClick={() => setSelectedId(msg.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '10px 16px', cursor: 'pointer',
+                    borderLeft: isPinned ? '2px solid rgba(255,63,164,0.4)' : '2px solid transparent',
+                    background: isPinned ? 'rgba(255,63,164,0.05)' : 'transparent',
+                  }}
+                >
+                  <Avatar msg={msg} size={40} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--pink-hot)', flexShrink: 0 }} />
+                      <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {msg.from}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {preview}
+                    </div>
+                  </div>
+                  <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px', flexShrink: 0 }}>›</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
-    <div style={{ display: 'flex', height: '100vh', fontFamily: 'var(--font-body)' }}>
+    <div style={{ display: 'flex', height: '100%', fontFamily: 'var(--font-body)' }}>
 
       {/* ── Left sidebar ── */}
       <div style={{
@@ -85,7 +171,7 @@ export default function Inbox({ initialSelectedId = null }) {
         padding: '16px 0',
         position: 'sticky',
         top: 0,
-        height: '100vh',
+        height: '100%',
       }}>
         <div style={{
           fontFamily: 'var(--font-title)',
