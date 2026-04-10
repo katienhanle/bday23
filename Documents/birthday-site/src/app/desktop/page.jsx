@@ -257,15 +257,62 @@ function FullScreenView({ win, onBack, appProps = {}, originPos = null }) {
 }
 
 // ─── Main Desktop ──────────────────────────────────────────────────────────
+function NavIcon({ id, size = 22 }) {
+  const props = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round' }
+  if (id === 'home') return (
+    <svg {...props}>
+      <path d="M3 12L12 4l9 8"/>
+      <path d="M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9"/>
+    </svg>
+  )
+  if (id === 'inbox') return (
+    <svg {...props}>
+      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+    </svg>
+  )
+  if (id === 'memories') return (
+    <svg {...props}>
+      <rect x="2" y="7" width="20" height="14" rx="2"/>
+      <path d="M16 7l-2-3H10L8 7"/>
+      <circle cx="12" cy="14" r="3"/>
+    </svg>
+  )
+  if (id === 'photobooth') return (
+    <svg {...props}>
+      <rect x="3" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/>
+      <rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+  )
+  if (id === 'playlist') return (
+    <svg {...props}>
+      <path d="M9 18V5l12-2v13"/>
+      <circle cx="6" cy="18" r="3"/>
+      <circle cx="18" cy="16" r="3"/>
+    </svg>
+  )
+  if (id === 'video') return (
+    <svg {...props}>
+      <polygon points="5 3 19 12 5 21 5 3"/>
+    </svg>
+  )
+  if (id === 'stickers') return (
+    <svg {...props}>
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </svg>
+  )
+  return null
+}
+
 const MOBILE_NAV = [
-  { id: 'home',       emoji: '🏠', label: 'Home'     },
-  { id: 'msg',        emoji: '💌', label: 'Letter'   },
-  { id: 'inbox',      emoji: '💬', label: 'Inbox'    },
-  { id: 'memories',   emoji: '📷', label: 'Memories' },
-  { id: 'photobooth', emoji: '📸', label: 'Photos'   },
-  { id: 'playlist',   emoji: '🎵', label: 'Music'    },
-  { id: 'video',      emoji: '🎬', label: 'Video'    },
-  { id: 'stickers',   emoji: '✨', label: 'Stickers' },
+  { id: 'home',       label: 'Home'     },
+  { id: 'inbox',      label: 'Inbox'    },
+  { id: 'memories',   label: 'Memories' },
+  { id: 'photobooth', label: 'Photos'   },
+  { id: 'playlist',   label: 'Music'    },
+  { id: 'video',      label: 'Video'    },
+  { id: 'stickers',   label: 'Stickers' },
 ]
 
 export default function Desktop() {
@@ -520,7 +567,7 @@ export default function Desktop() {
                     gap: 6,
                   }}
                 >
-                  <span style={{ fontSize: '1.4rem' }}>{item.emoji}</span>
+                  <NavIcon id={item.id} size={24} />
                   <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-body)' }}>
                     {item.label}
                   </span>
@@ -529,12 +576,6 @@ export default function Desktop() {
             </div>
           </div>
 
-          {/* Letter */}
-          <div style={{ display: view === 'msg' ? 'block' : 'none', height: '100%', overflowY: 'auto' }}>
-            <div style={{ padding: '24px 20px' }}>
-              <SecretMsg />
-            </div>
-          </div>
 
           {/* Inbox */}
           <div style={{ display: view === 'inbox' ? 'block' : 'none', height: '100%', overflow: 'hidden' }}>
@@ -598,7 +639,7 @@ export default function Desktop() {
                   padding: '0 10px',
                 }}
               >
-                <span style={{ fontSize: '1.1rem' }}>{item.emoji}</span>
+                <NavIcon id={item.id} size={20} />
                 <span style={{
                   fontSize: '8px',
                   fontFamily: 'var(--font-body)',
