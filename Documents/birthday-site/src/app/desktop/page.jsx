@@ -637,13 +637,14 @@ export default function Desktop() {
                   justifyContent: 'center',
                   gap: 3,
                   padding: '0 10px',
+                  color: active ? 'var(--pink-hot)' : 'rgba(255,63,164,0.4)',
                 }}
               >
                 <NavIcon id={item.id} size={20} />
                 <span style={{
                   fontSize: '8px',
                   fontFamily: 'var(--font-body)',
-                  color: active ? 'var(--pink-hot)' : 'rgba(255,255,255,0.35)',
+                  color: active ? 'var(--pink-hot)' : 'rgba(255,63,164,0.4)',
                   whiteSpace: 'nowrap',
                 }}>
                   {item.label}
