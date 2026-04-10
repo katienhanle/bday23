@@ -94,6 +94,8 @@ const MONTHS = [
     { file: '04052026.jpg',  date: 'Apr 5',  title: 'clubbing in pb', note: 'went clubbing in pb with friends!' },
     { file: '04092026.jpg',  date: 'Apr 9',  title: 'it\'s your birthday!', note: 'got cake from harucake and i got you a pink bouquet!' },
     { file: '04092026.gif',  date: 'Apr 9',  title: 'bouquet for bday girl', note: 'got cake from harucake and i got you a pink bouquet!' },
+    { file: '04092026second.gif',  date: 'Apr 9',  title: 'bday gift', note: 'first birthday of your 23rd!' },
+
   ]},
 ]
 
