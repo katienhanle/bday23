@@ -187,6 +187,22 @@ body {
 .pill-btn:hover  { filter: brightness(1.1); }
 .pill-btn:active { transform: scale(0.97); }
 
+/* ─── Desktop animations & hover classes ────────────────────────────────── */
+@keyframes star-pulse {
+  0%, 100% { opacity: var(--sop); transform: scale(1); }
+  50%       { opacity: calc(var(--sop) * 1.4); transform: scale(1.2); }
+}
+@keyframes fsv-expand {
+  from { transform: scale(0.04); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+.sticker-hover { transition: transform 0.2s ease; }
+.sticker-hover:hover { transform: scale(1.12); }
+.letter-hover { transition: transform 0.2s ease; transform: rotate(-6deg); }
+.letter-hover:hover { transform: rotate(-6deg) scale(1.12); }
+.video-hover  { transition: transform 0.2s ease; transform: rotate(4deg); }
+.video-hover:hover  { transform: rotate(4deg) scale(1.12); }
+
 /* ─── Scrollbar ─────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar       { width: 5px; }
 ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }

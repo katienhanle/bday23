@@ -176,6 +176,7 @@ function PhotoboothView({ onBack }) {
 function FullScreenView({ win, onBack, appProps = {}, originPos = null }) {
   const App = win.component
   const isMedia = win.id === 'video' || win.id === 'inbox' || win.id === 'memories'
+  const containerRef = useRef(null)
 
   const bodyBg      = win.variant === 'pink' ? 'var(--win-pink-body)'   : 'var(--win-dark-body)'
   const titlebarBg  = win.variant === 'pink' ? 'var(--win-pink-bar)'    : 'var(--win-dark-bar)'
@@ -186,19 +187,34 @@ function FullScreenView({ win, onBack, appProps = {}, originPos = null }) {
     ? `${Math.max(0, originPos.x - 175)}px ${originPos.y}px`
     : 'center center'
 
+  // After the expand animation ends, clear the transform so it doesn't create a
+  // new containing block — which breaks scrollIntoView and position:sticky in Safari.
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    function onEnd() {
+      el.style.transform = 'none'
+      el.style.animation = 'none'
+    }
+    el.addEventListener('animationend', onEnd, { once: true })
+    return () => el.removeEventListener('animationend', onEnd)
+  }, [])
+
   return (
-    <div style={{
-      position: 'absolute',
-      left: 175,
-      top: 0,
-      right: 0,
-      bottom: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      zIndex: 100,
-      transformOrigin,
-      animation: 'fsv-expand 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-    }}>
+    <div
+      ref={containerRef}
+      style={{
+        position: 'absolute',
+        left: 175,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        zIndex: 100,
+        transformOrigin,
+        animation: 'fsv-expand 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+      }}>
       {/* Titlebar */}
       <div style={{
         background: titlebarBg,
@@ -237,7 +253,7 @@ function FullScreenView({ win, onBack, appProps = {}, originPos = null }) {
       </div>
 
       {/* Scrollable content */}
-      <div style={{
+      <div className="fsv-scroll" style={{
         flex: 1,
         overflowY: 'auto',
         background: bodyBg,
@@ -450,23 +466,6 @@ export default function Desktop() {
       className="desktop-bg"
       style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}
     >
-      <style>{`
-        @keyframes star-pulse {
-          0%, 100% { opacity: var(--sop); transform: scale(1); }
-          50%       { opacity: calc(var(--sop) * 1.4); transform: scale(1.2); }
-        }
-        @keyframes fsv-expand {
-          from { transform: scale(0.04); opacity: 0; }
-          to   { transform: scale(1);    opacity: 1; }
-        }
-        .sticker-hover { transition: transform 0.2s ease; }
-        .sticker-hover:hover { transform: scale(1.12); }
-        .letter-hover { transition: transform 0.2s ease; transform: rotate(-6deg); }
-        .letter-hover:hover { transform: rotate(-6deg) scale(1.12); }
-        .video-hover  { transition: transform 0.2s ease; transform: rotate(4deg); }
-        .video-hover:hover  { transform: rotate(4deg) scale(1.12); }
-      `}</style>
-
       {/* ★ Background stars — only show in home view so they don't peek behind full-screen */}
       {view === 'home' && STARS.map((s, i) => (
         <span key={i} style={{

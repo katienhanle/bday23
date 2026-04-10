@@ -87,7 +87,12 @@ const MONTHS = [
     { file: '03162026.jpg',  date: 'Mar 16', title: 'movie date', note: 'watched hopper! i eat popcorn super fast' },
     { file: '03182026.JPEG', date: 'Mar 18', title: 'bye bye! see you soon', note: 'my cutie gf must return to la to go to the office tmr morning!' },
   ]},
-  { label: 'April 2026', sub: 'happy birthday again 🩷', photos: [] },
+  { label: 'April 2026', sub: 'happy birthday again 🩷', photos: [
+    { file: '04022026.jpg',  date: 'Apr 2',  title: 'kpop demon hunters night', note: 'mcdonalds and netflix kpop demon hunters night! hehe' },
+    { file: '04052026.jpg',  date: 'Apr 5',  title: 'clubbing in pb', note: 'went clubbing in pb with friends!' },
+    { file: '04092026.jpg',  date: 'Apr 9',  title: 'it\'s your birthday!', note: 'got cake from harucake and i got you a pink bouquet!' },
+    { file: '04092026.gif',  date: 'Apr 9',  title: 'birthday video', note: 'got cake from harucake and i got you a pink bouquet!' },
+  ]},
 ]
 
 function PhotoCard({ photo, index }) {
@@ -148,102 +153,51 @@ function monthId(label) {
   return month.slice(0, 3).toUpperCase() + year.slice(2)
 }
 
-function scrollToMonth(id) {
-  document.getElementById('month-' + id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
 export default function Memories({ showMonthNav = false }) {
   let idx = 0
 
   return (
-    <div style={{ fontFamily: 'var(--font-body)', padding: '36px 40px', maxWidth: 760, margin: '0 auto' }}>
+    <div style={{ fontFamily: 'var(--font-body)' }}>
 
-      <div style={{
-        textAlign: 'center', marginBottom: 14,
-        paddingBottom: 10, borderBottom: '1px solid rgba(255,255,255,0.1)',
-      }}>
-        <div style={{ fontFamily: 'var(--font-title)', fontSize: '1.45rem', color: 'var(--pink-hot)' }}>
-          Apr 9, 2025 → Apr 9, 2026
-        </div>
-        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', marginTop: 3 }}>
-          a whole year of memories ✦
-        </div>
-      </div>
-
-      {MONTHS.map((month) => {
-        const mid = monthId(month.label)
-        return (
-          <div key={month.label} id={'month-' + mid} style={{ marginBottom: 8, scrollMarginTop: 16 }}>
-            <div style={{
-              display: 'flex', alignItems: 'baseline', gap: 7,
-              marginBottom: 10, paddingBottom: 3,
-              borderBottom: '1px solid rgba(255,255,255,0.08)',
-            }}>
-              <span style={{ fontFamily: 'var(--font-title)', fontSize: '1.1rem', color: 'var(--pink-hot)' }}>
-                {month.label}
-              </span>
-              {month.sub && (
-                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>{month.sub}</span>
-              )}
-            </div>
-
-            {month.photos.length === 0 && (
-              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', paddingBottom: 8 }}>
-                coming soon 🩷
-              </div>
-            )}
-
-            {month.photos.map((p) => <PhotoCard key={p.file} photo={p} index={idx++} />)}
-          </div>
-        )
-      })}
-
-      <div style={{
-        textAlign: 'center', padding: '12px 0 4px',
-        fontFamily: 'var(--font-title)', fontSize: '1rem',
-        color: 'rgba(255,255,255,0.3)',
-      }}>✦ end of year one ✦</div>
-
-      {/* ── Fixed month nav — only in full-screen view ── */}
+      {/* ── Sticky month strip — only in full-screen ── */}
       {showMonthNav && (
         <div style={{
-          position: 'fixed',
-          right: 0,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2,
-          padding: '10px 6px',
-          borderLeft: '1px solid rgba(255,255,255,0.06)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
           background: 'var(--win-dark-body)',
-          zIndex: 200,
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          display: 'flex',
+          gap: 4,
+          padding: '6px 12px',
+          overflowX: 'auto',
         }}>
           {MONTHS.map((month) => {
             const mid = monthId(month.label)
             return (
               <button
                 key={mid}
-                onClick={() => scrollToMonth(mid)}
+                onClick={() => document.getElementById('month-' + mid)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                 style={{
                   background: 'none',
-                  border: 'none',
+                  border: '1px solid rgba(255,255,255,0.12)',
                   cursor: 'pointer',
                   fontFamily: 'var(--font-body)',
-                  fontSize: '11px',
-                  letterSpacing: '0.05em',
-                  color: 'rgba(255,255,255,0.35)',
-                  padding: '5px 10px',
-                  borderRadius: 4,
-                  textAlign: 'center',
-                  transition: 'color 0.15s, background 0.15s',
+                  fontSize: '10px',
+                  letterSpacing: '0.06em',
+                  color: 'rgba(255,255,255,0.45)',
+                  padding: '3px 9px',
+                  whiteSpace: 'nowrap',
+                  transition: 'color 0.15s, border-color 0.15s, background 0.15s',
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.color = 'var(--pink-hot)'
+                  e.currentTarget.style.borderColor = 'var(--pink-hot)'
                   e.currentTarget.style.background = 'rgba(255,63,164,0.08)'
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.color = 'rgba(255,255,255,0.35)'
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.45)'
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'
                   e.currentTarget.style.background = 'none'
                 }}
               >
@@ -254,6 +208,54 @@ export default function Memories({ showMonthNav = false }) {
         </div>
       )}
 
+      {/* ── Timeline content ── */}
+      <div style={{ padding: '36px 40px', maxWidth: 760, margin: '0 auto' }}>
+        <div style={{
+          textAlign: 'center', marginBottom: 14,
+          paddingBottom: 10, borderBottom: '1px solid rgba(255,255,255,0.1)',
+        }}>
+          <div style={{ fontFamily: 'var(--font-title)', fontSize: '1.45rem', color: 'var(--pink-hot)' }}>
+            Apr 9, 2025 → Apr 9, 2026
+          </div>
+          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', marginTop: 3 }}>
+            a whole year of memories ✦
+          </div>
+        </div>
+
+        {MONTHS.map((month) => {
+          const mid = monthId(month.label)
+          return (
+            <div key={month.label} id={'month-' + mid} style={{ marginBottom: 8, scrollMarginTop: 44 }}>
+              <div style={{
+                display: 'flex', alignItems: 'baseline', gap: 7,
+                marginBottom: 10, paddingBottom: 3,
+                borderBottom: '1px solid rgba(255,255,255,0.08)',
+              }}>
+                <span style={{ fontFamily: 'var(--font-title)', fontSize: '1.1rem', color: 'var(--pink-hot)' }}>
+                  {month.label}
+                </span>
+                {month.sub && (
+                  <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>{month.sub}</span>
+                )}
+              </div>
+
+              {month.photos.length === 0 && (
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', paddingBottom: 8 }}>
+                  coming soon 🩷
+                </div>
+              )}
+
+              {month.photos.map((p) => <PhotoCard key={p.file} photo={p} index={idx++} />)}
+            </div>
+          )
+        })}
+
+        <div style={{
+          textAlign: 'center', padding: '12px 0 4px',
+          fontFamily: 'var(--font-title)', fontSize: '1rem',
+          color: 'rgba(255,255,255,0.3)',
+        }}>✦ end of year one ✦</div>
+      </div>
     </div>
   )
 }
