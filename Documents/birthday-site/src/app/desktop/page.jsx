@@ -565,10 +565,11 @@ export default function Desktop() {
                     flexDirection: 'column',
                     alignItems: 'center',
                     gap: 6,
+                    color: 'rgba(255,63,164,0.55)',
                   }}
                 >
                   <NavIcon id={item.id} size={24} />
-                  <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-body)' }}>
+                  <span style={{ fontSize: '9px', color: 'rgba(255,63,164,0.55)', fontFamily: 'var(--font-body)' }}>
                     {item.label}
                   </span>
                 </button>
